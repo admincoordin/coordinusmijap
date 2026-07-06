@@ -1,0 +1,43 @@
+name: Mantenimiento semanal Supabase
+
+# Se ejecuta automáticamente cada domingo a las 03:00 UTC
+# y también se puede lanzar a mano desde la pestaña "Actions" de GitHub
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+jobs:
+  ciclo-mantenimiento:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Alta (duplicado temporal)
+        id: alta
+        run: |
+          RESP=$(curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{"seccion_origen":"sistema","nombre":"keepalive-semanal","accion":"duplicado"}')
+          echo "Respuesta insercion: $RESP"
+          ROW_ID=$(echo "$RESP" | jq -r '.[0].id')
+          echo "row_id=$ROW_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Baja del duplicado
+        if: steps.alta.outputs.row_id != '' && steps.alta.outputs.row_id != 'null'
+        run: |
+          curl -s -X DELETE "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd?id=eq.${{ steps.alta.outputs.row_id }}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+          echo "Fila ${{ steps.alta.outputs.row_id }} eliminada"
+
+      - name: Alta final (confirmacion del ciclo)
+        run: |
+          curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{"seccion_origen":"sistema","nombre":"keepalive-semanal","accion":"confirmacion"}'
+          echo "Ciclo de mantenimiento completado"
