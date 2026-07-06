@@ -32,12 +32,13 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
           echo "Fila ${{ steps.alta.outputs.row_id }} eliminada"
 
-      - name: Alta final (confirmacion del ciclo)
+      - name: Actualizar fila de estado (sin acumular filas nuevas)
         run: |
-          curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd" \
+          AHORA=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd?on_conflict=clave" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
-            -H "Prefer: return=representation" \
-            -d '{"seccion_origen":"sistema","nombre":"keepalive-semanal","accion":"confirmacion"}'
-          echo "Ciclo de mantenimiento completado"
+            -H "Prefer: resolution=merge-duplicates,return=representation" \
+            -d "{\"clave\":\"estado_ciclo\",\"seccion_origen\":\"sistema\",\"nombre\":\"keepalive-semanal\",\"accion\":\"confirmacion\",\"creado_en\":\"$AHORA\"}"
+          echo "Ciclo de mantenimiento completado (fila de estado actualizada, sin filas nuevas acumuladas)"
