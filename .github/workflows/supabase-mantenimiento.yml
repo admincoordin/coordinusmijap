@@ -11,34 +11,92 @@ jobs:
   ciclo-mantenimiento:
     runs-on: ubuntu-latest
     steps:
-      - name: Alta (duplicado temporal)
-        id: alta
+
+      # ────────────────────────────────────────────────────────
+      # PASO 1: crear una copia nueva de un documento real,
+      # con nombre aleatorio, guardada en una carpeta oculta
+      # ────────────────────────────────────────────────────────
+      - name: Crear copia semanal con nombre aleatorio
         run: |
-          RESP=$(curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd" \
+          set -e
+
+          # 1. Trae todos los documentos reales ya subidos
+          DOCS=$(curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/archivos?select=id,seccion,nombre,url" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+
+          TOTAL=$(echo "$DOCS" | jq 'length')
+          echo "Documentos encontrados: $TOTAL"
+
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "No hay documentos todavía en 'archivos'; se omite la copia esta semana."
+            exit 0
+          fi
+
+          # 2. Elige uno al azar
+          IDX=$((RANDOM % TOTAL))
+          DOC=$(echo "$DOCS" | jq -c ".[$IDX]")
+          NOMBRE_ORIG=$(echo "$DOC" | jq -r '.nombre')
+          SECCION=$(echo "$DOC" | jq -r '.seccion')
+          URL_ORIG=$(echo "$DOC" | jq -r '.url')
+          echo "Documento elegido: $NOMBRE_ORIG (sección: $SECCION)"
+
+          # 3. Descarga el archivo original
+          curl -s -L "$URL_ORIG" --output /tmp/original_file
+
+          # 4. Genera un código aleatorio y la nueva ruta oculta
+          CODIGO=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 10)
+          SAFE_NAME=$(echo "$NOMBRE_ORIG" | tr -cd 'A-Za-z0-9._-')
+          NUEVO_NOMBRE="${CODIGO}_${SAFE_NAME}"
+          STORAGE_PATH="_mantenimiento/${NUEVO_NOMBRE}"
+
+          # 5. Sube la copia a Storage bajo la carpeta oculta "_mantenimiento"
+          curl -s -X POST "${{ secrets.SUPABASE_URL }}/storage/v1/object/documentos/${STORAGE_PATH}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/octet-stream" \
+            -H "x-upsert: true" \
+            --data-binary @/tmp/original_file
+
+          # 6. Registra la copia en mantenimiento_bd (NO en "archivos", así no la ve nadie más)
+          curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
-            -H "Prefer: return=representation" \
-            -d '{"seccion_origen":"sistema","nombre":"keepalive-semanal","accion":"duplicado"}')
-          echo "Respuesta insercion: $RESP"
-          ROW_ID=$(echo "$RESP" | jq -r '.[0].id')
-          echo "row_id=$ROW_ID" >> "$GITHUB_OUTPUT"
+            -H "Prefer: return=minimal" \
+            -d "{\"storage_path\":\"${STORAGE_PATH}\",\"nombre_copia\":\"${NUEVO_NOMBRE}\",\"seccion_origen\":\"${SECCION}\",\"nombre_original\":\"${NOMBRE_ORIG}\"}"
 
-      - name: Baja del duplicado
-        if: steps.alta.outputs.row_id != '' && steps.alta.outputs.row_id != 'null'
-        run: |
-          curl -s -X DELETE "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd?id=eq.${{ steps.alta.outputs.row_id }}" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
-          echo "Fila ${{ steps.alta.outputs.row_id }} eliminada"
+          echo "Copia creada: $STORAGE_PATH"
 
-      - name: Actualizar fila de estado (sin acumular filas nuevas)
+      # ────────────────────────────────────────────────────────
+      # PASO 2: borrar las copias que ya tengan más de 21 días
+      # ────────────────────────────────────────────────────────
+      - name: Eliminar copias con más de 21 días
         run: |
-          AHORA=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          curl -s -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd?on_conflict=clave" \
+          set -e
+
+          CUTOFF=$(date -u -d "21 days ago" +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Borrando copias creadas antes de: $CUTOFF"
+
+          CADUCADAS=$(curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd?creado_en=lt.${CUTOFF}&select=id,storage_path" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Content-Type: application/json" \
-            -H "Prefer: resolution=merge-duplicates,return=representation" \
-            -d "{\"clave\":\"estado_ciclo\",\"seccion_origen\":\"sistema\",\"nombre\":\"keepalive-semanal\",\"accion\":\"confirmacion\",\"creado_en\":\"$AHORA\"}"
-          echo "Ciclo de mantenimiento completado (fila de estado actualizada, sin filas nuevas acumuladas)"
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+
+          echo "$CADUCADAS" | jq -c '.[]' | while read -r ROW; do
+            ID=$(echo "$ROW" | jq -r '.id')
+            PATH_STORAGE=$(echo "$ROW" | jq -r '.storage_path')
+
+            # Borra el archivo del storage
+            curl -s -X DELETE "${{ secrets.SUPABASE_URL }}/storage/v1/object/documentos/${PATH_STORAGE}" \
+              -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+
+            # Borra la fila de la tabla
+            curl -s -X DELETE "${{ secrets.SUPABASE_URL }}/rest/v1/mantenimiento_bd?id=eq.${ID}" \
+              -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+
+            echo "Eliminada copia caducada: $PATH_STORAGE"
+          done
+
+          echo "Limpieza de copias caducadas completada."
