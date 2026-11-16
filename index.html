@@ -168,18 +168,12 @@
   .sec-buzon .card-hd { border-color:#fbdada; }
   .sec-tool  .c-icon  { background:#e8f5e9; color:#2e7d32; }
   .sec-tool  .card-hd { border-color:#c8e6c9; }
-  .sec-mant  .c-icon  { background:#ede7f6; color:#5e35b1; }
-  .sec-mant  .card-hd { border-color:#d1c4e9; }
   .tool-body { padding:1rem 1.25rem 1.2rem; flex:1; display:flex; flex-direction:column; gap:.7rem; }
   .tool-desc { font-size:.8rem; color:var(--muted); line-height:1.6; }
   .tool-warn { font-size:.73rem; color:var(--amber); background:#fff8e1; border-left:3px solid var(--amber); padding:.45rem .65rem; border-radius:5px; line-height:1.5; }
   .btn-tool  { display:flex; align-items:center; justify-content:center; gap:.45rem; padding:.7rem; background:var(--teal); color:#fff; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:500; cursor:pointer; text-decoration:none; transition:background .2s; }
   .btn-tool:hover { background:var(--teal-lt); }
-  .btn-tool:disabled { opacity:.6; cursor:not-allowed; }
   .sec-fam   .c-badge { background:#fff3e0; color:var(--amber); }
-  .mant-log { font-size:.72rem; color:var(--muted); max-height:130px; overflow-y:auto; text-align:left; background:var(--cream); border-radius:7px; padding:.5rem .6rem; line-height:1.6; }
-  .mant-log div { border-bottom:1px dashed var(--warm); padding:.15rem 0; }
-  .mant-log div:last-child { border-bottom:none; }
 
   /* locked overlay for familias */
   .fam-locked-msg { padding:1.6rem .8rem; text-align:center; color:var(--muted); font-size:.82rem; }
@@ -369,23 +363,9 @@
       <div class="tool-body">
         <p class="tool-desc">Herramienta interactiva de apoyo diagnóstico psiquiátrico infanto-juvenil. Selecciona síntomas, criterios temporales y funcionales para obtener una orientación diagnóstica.</p>
         <p class="tool-warn">⚠ Herramienta orientativa — no sustituye la evaluación clínica</p>
-        <a class="btn-tool" href="https://hostmyclaudehtml.com/p/l6rguJ5hb6" target="_blank" rel="noopener">
+        <a class="btn-tool" href="herramienta.html" target="_blank" rel="noopener">
           🔗 Abrir herramienta
         </a>
-      </div>
-    </div>
-
-    <!-- ⑦ MANTENIMIENTO DE LA BASE DE DATOS (solo admin) -->
-    <div class="card sec-mant" id="card-mant" style="display:none">
-      <div class="card-hd">
-        <div class="c-icon">🛠️</div>
-        <div class="c-title">Mantenimiento<br>de la Base de Datos</div>
-      </div>
-      <div class="tool-body">
-        <p class="tool-desc">Genera actividad periódica en Supabase (altas y bajas de registros en una tabla interna, separada de los documentos) para evitar que el proyecto se pause por inactividad. No modifica ni afecta a los documentos ni pestañas visibles para el resto de usuarios.</p>
-        <p class="tool-warn" id="mant-status">Última ejecución registrada: —</p>
-        <button class="btn-tool" onclick="runMaintenanceNow()" id="mant-btn">▶ Ejecutar ciclo de mantenimiento ahora</button>
-        <div class="mant-log" id="mant-log"></div>
       </div>
     </div>
 
@@ -510,7 +490,6 @@ function applyLevel() {
   const showPaciente = level === 1 || level === 'p' || level === 3;
   const showBuzon    = level === 1 || level === 3;
   const showTool     = level === 1 || level === 3;
-  const showMant     = level === 3;
 
   document.getElementById('card-diag').style.display     = showDiag     ? 'flex' : 'none';
   document.getElementById('card-psico').style.display    = showPsico    ? 'flex' : 'none';
@@ -518,7 +497,6 @@ function applyLevel() {
   document.getElementById('card-paciente').style.display = showPaciente ? 'flex' : 'none';
   document.getElementById('card-buzon').style.display    = showBuzon    ? 'flex' : 'none';
   document.getElementById('card-tool').style.display     = showTool     ? 'flex' : 'none';
-  document.getElementById('card-mant').style.display     = showMant     ? 'flex' : 'none';
 
   // Familias: siempre visible (sin candado) cuando level=f o admin
   document.getElementById('fam-locked').style.display  = showFam  ? 'none'  : 'block';
@@ -600,7 +578,6 @@ async function loadAll() {
       store.buzon = Array.isArray(bz) ? bz : [];
       renderBuzon();
     }
-    if (level === 3) loadMantStatus();
   } catch(e) { toast('Error al conectar con la base de datos'); }
   showLoader(false);
 }
@@ -726,70 +703,6 @@ async function delMsg(id) {
   store.buzon = store.buzon.filter(m=>m.id!==id);
   renderBuzon();
   showLoader(false);
-}
-
-// ══════════════════════════════════════════════
-//  MANTENIMIENTO DE LA BASE DE DATOS (solo admin)
-//  Genera actividad periódica (alta → baja → alta) en una tabla
-//  independiente ("mantenimiento_bd"), que NUNCA se muestra en ninguna
-//  lista visible para lectura/familias/pacientes. Los documentos reales
-//  de la tabla "archivos" NO se tocan en ningún momento.
-// ══════════════════════════════════════════════
-async function loadMantStatus() {
-  try {
-    const rows = await sbGet('mantenimiento_bd');
-    const el = document.getElementById('mant-status');
-    if (Array.isArray(rows) && rows.length && rows[0].creado_en) {
-      const last = new Date(rows[0].creado_en);
-      el.textContent = 'Última ejecución registrada: ' + last.toLocaleString('es-ES');
-    } else {
-      el.textContent = 'Última ejecución registrada: — (todavía no se ha ejecutado, o falta crear la tabla "mantenimiento_bd")';
-    }
-  } catch(e) { /* la tabla puede no existir todavía: se ignora silenciosamente */ }
-}
-
-async function runMaintenanceNow() {
-  if (level !== 3) return;
-  const btn = document.getElementById('mant-btn');
-  const log = document.getElementById('mant-log');
-  btn.disabled = true; btn.textContent = 'Ejecutando…';
-  log.innerHTML = '';
-  const addLog = (t) => { log.innerHTML += `<div>${t}</div>`; log.scrollTop = log.scrollHeight; };
-
-  try {
-    // Referencia de solo lectura a los documentos reales ya existentes
-    // (no se leen ni modifican sus filas, solo se usan sus nombres como referencia)
-    const refs = [];
-    ['diag','psico','fam','paciente'].forEach(s => {
-      (store[s] || []).forEach(f => refs.push({ seccion_origen: s, nombre: f.nombre }));
-    });
-    const sample = refs.length ? refs : [{ seccion_origen: 'sistema', nombre: 'ping' }];
-
-    for (const ref of sample) {
-      // 1. Alta (duplicado temporal en tabla de mantenimiento, no en "archivos")
-      const insRes = await sbInsert('mantenimiento_bd', { seccion_origen: ref.seccion_origen, nombre: ref.nombre, accion: 'duplicado' });
-      if (!insRes.ok) { addLog('⚠ No se pudo insertar (¿existe la tabla "mantenimiento_bd"?)'); break; }
-      const [row] = await insRes.json();
-      addLog(`✚ Alta: ${ref.nombre} (${ref.seccion_origen})`);
-
-      // 2. Baja del duplicado
-      if (row && row.id) {
-        await sbDelete('mantenimiento_bd', row.id);
-        addLog(`✕ Baja: ${ref.nombre}`);
-      }
-
-      // 3. Alta final, deja constancia de la actividad de este ciclo
-      await sbInsert('mantenimiento_bd', { seccion_origen: ref.seccion_origen, nombre: ref.nombre, accion: 'confirmacion' });
-      addLog(`✚ Confirmación registrada: ${ref.nombre}`);
-    }
-    addLog('✔ Ciclo de mantenimiento completado.');
-    await loadMantStatus();
-    toast('Mantenimiento completado ✓');
-  } catch (e) {
-    addLog('⚠ Error: ' + e.message);
-    toast('Error durante el mantenimiento');
-  }
-  btn.disabled = false; btn.textContent = '▶ Ejecutar ciclo de mantenimiento ahora';
 }
 
 // ══════════════════════════════════════════════
