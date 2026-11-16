@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aproximación Diagnóstica · USMIJ Sector III Zaragoza</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f4ef;--card:#fff;--tx:#1c2a2a;--mut:#5a7070;--bd:#e8e0d5;--ac:#1a6b6b;--ok:#1a9e63;--no:#c0392b;--tr:#f0ebe3;--teal-lt:#2a9090;--shadow:0 4px 24px rgba(26,107,107,.13)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 'DM Sans',system-ui,-apple-system,sans-serif}
+
+/* Cabecera igual que el portal */
+header{background:var(--ac);color:#fff;padding:1.9rem 2rem 1.5rem;text-align:center;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 14px)}
+header h1{font-family:'Playfair Display',serif;font-size:clamp(1.25rem,3vw,1.8rem);letter-spacing:.02em;position:relative;line-height:1.3;margin:0}
+header p{font-size:.8rem;margin:.4rem 0 0;opacity:.7;letter-spacing:.07em;text-transform:uppercase;position:relative}
+.hd{width:42px;height:3px;background:rgba(255,255,255,.3);margin:.8rem auto 0;border-radius:2px;position:relative}
+.back{position:absolute;left:1.2rem;top:1rem;z-index:2;color:#fff;text-decoration:none;font-size:.78rem;background:rgba(255,255,255,.15);padding:.35rem .8rem;border-radius:20px;transition:background .2s}
+.back:hover{background:rgba(255,255,255,.28)}
+
+main{max-width:1100px;margin:0 auto;padding:1.6rem 1.4rem 3rem}
+.intro{color:var(--mut);margin:0 0 10px}
+.warn{display:inline-block;background:#fff8e1;color:#b45309;border-left:3px solid #b45309;border-radius:6px;padding:5px 10px;font-size:.85rem;margin-bottom:14px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:.8rem;margin-bottom:16px}
+.legend span,.tag,.kind{border-radius:20px;padding:2px 9px;font-size:.72rem;border:1px solid var(--bd)}
+.layout{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+.sec{background:var(--card);border-radius:13px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:14px}
+.sec>h2{font-family:'Playfair Display',serif;font-size:1.02rem;margin:0 0 8px;color:var(--ac)}
+.sub{font-size:.8rem;font-weight:600;color:var(--mut);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.03em}
+.item{display:flex;gap:9px;align-items:flex-start;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.item:hover{background:var(--tr)}
+.item input{margin-top:4px;flex:none;accent-color:var(--ac)}
+.item.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.item.on.t-x{border-color:var(--no);background:color-mix(in srgb,var(--no) 10%,transparent)}
+.txt{flex:1}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tag{background:var(--tr);color:var(--mut)}
+.kind{margin-right:6px;font-weight:600}
+.k-t{color:#b45309}.k-f{color:#2563ab}.k-x{color:var(--no)}
+.side{position:sticky;top:12px;background:var(--card);border-radius:13px;box-shadow:var(--shadow);padding:12px 14px}
+@media(max-width:860px){.side{position:static}}
+.side h2{font-family:'Playfair Display',serif;font-size:1.02rem;margin:0 0 10px;color:var(--ac)}
+.dx{padding:9px 0;border-top:1px solid var(--bd)}
+.dx:first-of-type{border-top:0}
+.dxh{display:flex;justify-content:space-between;font-weight:600}
+.bar{position:relative;height:12px;background:var(--tr);border-radius:7px;overflow:hidden;margin:6px 0 4px}
+.fill{height:100%;width:0;background:var(--ac);transition:width .3s}
+.mark{position:absolute;top:0;bottom:0;width:2px;background:var(--card)}
+.segs{display:flex;gap:6px;font-size:.72rem;color:var(--mut)}
+.segs b{font-weight:500}
+.segs .u{color:var(--ok);font-weight:600}
+.req{font-size:.72rem;color:var(--mut);margin-top:3px}
+.stat{font-size:.78rem;margin-top:3px;color:var(--mut)}
+.dx.blk .fill{background:var(--no)}
+.dx.blk .stat{color:var(--no)}
+.dx.full .fill{background:var(--ok)}
+button{margin-top:12px;width:100%;padding:9px;border-radius:9px;border:none;background:var(--ac);color:#fff;cursor:pointer;font:inherit;font-weight:500;transition:background .2s}
+button:hover{background:var(--teal-lt)}
+
+footer{text-align:center;padding:1.3rem;font-size:.7rem;color:var(--mut);border-top:1px solid var(--bd)}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="index.html">← Volver al portal</a>
+  <h1>Aproximación Diagnóstica<br>Psiquiátrica</h1>
+  <p>Coordinación AP · USMIJ Sector III – Zaragoza</p>
+  <div class="hd"></div>
+</header>
+
+<main>
+<p class="intro">Selecciona síntomas, signos, criterios temporales, funcionales y de exclusión. La barra de cada diagnóstico progresa en tres segmentos: los síntomas solos solo llegan al 40%; la temporalidad desbloquea hasta el 70%; la funcionalidad hasta el 100%.</p>
+<div class="warn">⚠ Herramienta orientativa — no sustituye la evaluación clínica</div>
+<div class="legend">
+<span>Síntoma / Signo</span><span class="k-t">Temporal — desbloquea seg. 2</span><span class="k-f">Funcional — desbloquea seg. 3</span><span class="k-x">Exclusión — bloquea diagnóstico</span>
+</div>
+<div class="layout">
+<div id="list"></div>
+<aside class="side"><h2>Aproximación diagnóstica</h2><div id="res"></div><button id="clr">↺ Limpiar todo</button></aside>
+</div>
+</main>
+
+<footer>
+  Plataforma interna · AP · USMIJ Sector III Zaragoza &nbsp;·&nbsp; Uso exclusivo profesional
+</footer>
+
+<script>
+// Diagnósticos (clave: nombre, umbral de síntomas, textos de los 3 segmentos)
+const DX = {
+  A:{n:'TDAH',th:6,r:['6+ síntomas de inatención o hiperactividad','Inicio <12 años · patrón ≥6 meses','Funcionalidad afectada en ≥2 contextos']},
+  E:{n:'TEA',th:5,r:['3 criterios sociales + 2 restrictivos','Inicio en fases tempranas del desarrollo','Deterioro clínicamente significativo']},
+  O:{n:'TOC',th:2,r:['Obsesiones y/o compulsiones presentes','Más de 1 hora al día','Interferencia en rutina significativa']},
+  N:{n:'TND',th:4,r:['4+ síntomas oposicionistas','Patrón ≥6 meses · casi todos los días','Malestar en entorno inmediato']},
+  F:{n:'Fobia Social / Escolar',th:2,r:['Miedo/evitación situacional intensa','Persistencia ≥6 meses','Aislamiento o absentismo significativo']},
+  D:{n:'Trastorno Depresivo',th:5,r:['5+ síntomas depresivos nucleares','Duración ≥2 semanas continuas','Deterioro social/laboral/académico']},
+  X:{n:'Adicción / T. por Uso',th:2,r:['2+ criterios de uso problemático','Patrón en los últimos 12 meses','Deterioro social o laboral']},
+  T:{n:'Tics Crónicos',th:2,r:['Tics motores O vocales presentes','≥12 meses · inicio <18 años','Malestar o interferencia significativa']},
+  G:{n:'Gilles de la Tourette',th:3,r:['Tics motores múltiples + ≥1 vocal','Ambos tipos ≥1 año · inicio <18 a.','Deterioro clínicamente significativo']}
+};
+const LBL = {A:'TDAH',E:'TEA',O:'TOC',N:'TND',F:'Fobias',D:'Depresión',X:'Adicción',T:'Tics',G:'Tourette'};
+const ALL = 'AEONFDXTG';
+
+// [tipo, texto, dx]  tipo: s=síntoma, g=signo, t=temporal, f=funcional, x=exclusión; 'h' = subtítulo
+const SYM = [
+['h','Inatención / Desorganización'],
+['s','Dificultad para **prestar o mantener la atención** en tareas, juegos o conversaciones','A'],
+['s','Parece **no escuchar** cuando se le habla; no sigue instrucciones ni termina tareas','A'],
+['s','**Desorganización**: pierde objetos, olvida actividades, evita esfuerzos mentales sostenidos','A'],
+['s','Dificultad para **concentrarse** o tomar decisiones; indecisión persistente','AD'],
+['s','Se **distrae fácilmente** por estímulos externos irrelevantes','A'],
+['h','Hiperactividad / Impulsividad'],
+['s','Se **mueve constantemente**: juguetea, golpea, se levanta en situaciones inapropiadas, corretea','A'],
+['s','Siempre "en marcha" como si tuviera un **motor**; incapaz de estar tranquilo','A'],
+['s','**Impulsividad**: respuestas precipitadas, interrumpe, no respeta turnos, habla excesiva','AN'],
+['h','Conducta oposicionista / Irritabilidad'],
+['s','**Pierde la paciencia** con frecuencia; resentido o susceptible','N'],
+['s','**Discute** con adultos o figuras de autoridad habitualmente','N'],
+['s','Desafía activamente o **rechaza cumplir normas** y peticiones','N'],
+['s','**Molesta** a los demás intencionadamente; **culpa a otros** por sus propios errores','N'],
+['s','Actitud **rencorosa o vengativa** (≥2 veces en los últimos 6 meses)','N'],
+['h','Comunicación social / Relación'],
+['s','Déficit en **reciprocidad socioemocional**: no inicia ni responde a interacciones sociales','E'],
+['s','Déficit en **comunicación no verbal**: gestos reducidos, escaso contacto visual, expresión facial limitada','E'],
+['s','Dificultad para **ajustar el comportamiento** a contextos sociales; dificultad para hacer o mantener amigos','E'],
+['s','Miedo intenso a la **evaluación negativa** o al escrutinio; temor a actuar de forma humillante','FE'],
+['s','En niños: el miedo social ocurre en **reuniones con iguales**, no solo con adultos','F'],
+['h','Patrones restrictivos / Rituales / Obsesiones'],
+['s','Movimientos, uso de objetos o habla **estereotipados y repetitivos** (ecolalia, aleteo…)','E'],
+['s','**Inflexibilidad** ante cambios; insistencia en monotonía y rutinas rígidas','E'],
+['s','Intereses muy **restringidos y fijos** de intensidad anormal','E'],
+['s','**Hiper o hiporreactividad sensorial**: respuestas exageradas o ausentes a sonidos, texturas, luz, dolor','E'],
+['s','Pensamientos, impulsos o imágenes **recurrentes e intrusivos** no deseados (obsesiones: contaminación, duda, orden, simetría…)','O'],
+['s','Intenta **suprimir o neutralizar** esos pensamientos; comportamientos repetitivos (lavado, comprobaciones) para reducir la ansiedad','O'],
+['h','Estado de ánimo / Afecto'],
+['s','**Estado de ánimo deprimido** la mayor parte del día','D'],
+['s','Pérdida de **interés o placer** en actividades antes disfrutadas (anhedonia)','D'],
+['s','Sentimientos de **inutilidad, culpa excesiva** o desesperanza','D'],
+['s','**Pensamientos recurrentes de muerte** o ideas de autolesión','D'],
+['s','Pérdida de **energía o fatiga** constante; agitación o enlentecimiento psicomotor','D'],
+['s','Alteración del **apetito/peso** (>5% en un mes) o del sueño (insomnio/hipersomnia)','D'],
+['h','Fobia escolar / Evitación'],
+['s','**Quejas somáticas** recurrentes (dolor abdominal, cefalea) asociadas a ir al colegio o situaciones sociales','F'],
+['s','**Rechazo persistente** a asistir al centro educativo (absentismo)','F'],
+['s','Angustia intensa ante la **separación de figuras de apego**','F'],
+['h','Adicciones — Control deteriorado'],
+['s','Consume en **cantidades mayores o durante más tiempo** del previsto; deseo persistente de controlarlo sin éxito','X'],
+['s','**Craving**: deseo intenso o urgencia irresistible de consumir','X'],
+['s','Invierte mucho tiempo en **obtener, consumir o recuperarse** de la sustancia','X'],
+['s','Continúa consumiendo **a pesar de daños físicos, psicológicos o sociales** conocidos','X'],
+['s','**Tolerancia**: necesita cantidades crecientes para el mismo efecto','X'],
+['s','**Abstinencia**: síndrome característico al cesar, o consume para evitarlo','X'],
+['h','Tics'],
+['s','**Tics motores simples**: parpadeo, muecas, sacudidas de cabeza, encogimiento de hombros…','TG'],
+['s','**Tics vocales simples**: aclaramiento de garganta, olfateos, gruñidos involuntarios','TG'],
+['s','**Tics motores complejos**: secuencias coordinadas (tocarse, saltar, copropaxia)','G'],
+['s','**Tics vocales complejos**: palabras fuera de contexto, ecolalia, palilalia, coprolalia','G'],
+['s','**Sensación premonitoria**: urgencia o tensión antes del tic que se alivia al realizarlo; suprimibles con esfuerzo','TG'],
+['s','Los tics **varían en tipo e intensidad**; empeoran con estrés y disminuyen con concentración o sueño','TG']
+];
+const SIG = [
+['g','**Inquietud psicomotriz** evidente; distractibilidad por estímulos irrelevantes durante la entrevista','A'],
+['g','Actitud **hostil o desafiante**; baja tolerancia a la frustración; externalización de la culpa','NA'],
+['g','**Irritabilidad fácil** o labilidad emocional marcada','ND'],
+['g','Alteración en el **uso pragmático del lenguaje**; afecto inapropiado al contexto; manierismos observables','E'],
+['g','Pensamiento con **contenido obsesivo**; ansiedad marcada si se interrumpe el ritual; posibles lesiones cutáneas por limpieza','O'],
+['g','**Inhibición conductual**: evita la mirada, rubor facial, hipofonía o mutismo selectivo; taquicardia, temblor, sudoración','F'],
+['g','**Facies triste**, contacto ocular pobre, desaliño; enlentecimiento o agitación motora observable','D'],
+['g','Signos físicos de consumo: **miosis/midriasis, tremor**; negación o minimización del problema; ansiedad/disforia sin consumo','X'],
+['g','**Tics observables** durante la entrevista; vergüenza o estrategias de camuflaje visibles','TG'],
+['g','Síntomas de **TDAH u OCD comórbidos** (muy frecuente en Tourette)','G']
+];
+const TMP = [
+['t','Síntomas de TDAH presentes **antes de los 12 años**','A'],
+['t','Patrón mantenido durante **al menos 6 meses**, casi todos los días','ANF'],
+['t','Síntomas de TEA presentes en las **primeras fases del desarrollo**','E'],
+['t','Síntomas depresivos durante **al menos 2 semanas** continuas, casi todos los días','D'],
+['t','Obsesiones o compulsiones que consumen **más de 1 hora al día**','O'],
+['t','Patrón de consumo problemático durante los **últimos 12 meses**','X'],
+['t','Inicio de los tics **antes de los 18 años**','TG'],
+['t','Tics crónicos presentes durante **≥12 meses** sin remisión >3 meses consecutivos','T'],
+['t','Tics motores Y vocales presentes durante **más de 1 año** sin remisión >3 meses','G']
+];
+const FUN = [
+['f','Interferencia clara en el **rendimiento académico o laboral**','ADOX'],
+['f','**Aislamiento social** o deterioro significativo en relaciones con iguales','FEDXGT'],
+['f','Malestar o conflicto en el **entorno familiar o social inmediato**','NA'],
+['f','Deterioro **clínicamente significativo** en ≥2 áreas del funcionamiento · síntomas en ≥2 contextos distintos',ALL]
+];
+const EXC = [
+['x','Los síntomas oposicionistas ocurren **exclusivamente durante episodio psicótico, depresivo, bipolar o por consumo** → excluye TND','N'],
+['x','Síntomas son **únicamente manifestación de oposición o desafío**, no trastorno crónico desde la infancia → excluye TDAH','A'],
+['x','Síntomas depresivos **mejor explicados por duelo, trastorno bipolar o condición médica** → excluye Depresión mayor','D'],
+['x','Evitación escolar explicada por **timidez normal del desarrollo o acoso escolar (bullying)** → excluye Fobia','F'],
+['x','Dificultad social mejor explicada por **trastorno de la comunicación (TEA)** → excluye Fobia Social','F'],
+['x','Preocupaciones mejor explicadas por **tics, trastorno de conducta alimentaria o TAG** → excluye TOC','O'],
+['x','Tics causados por **sustancia, medicación o enfermedad neurológica** (Huntington, encefalitis…) → excluye Tics y Tourette','TG'],
+['x','Tolerancia o abstinencia debidas a **uso médico prescrito y supervisado** → no computa para Adicción','X'],
+['x','Déficit social mejor explicado por **discapacidad intelectual o retraso global del desarrollo** → excluye TEA como dx primario','E']
+];
+const SECTIONS = [
+  {t:'🔵 Síntomas referidos',items:SYM},
+  {t:'🔶 Signos en el examen mental',items:SIG},
+  {t:'⏱ Criterios de temporalidad — desbloquean el segmento 2 de la barra',items:TMP},
+  {t:'⚙ Pérdida de funcionalidad — desbloquean el segmento 3 de la barra',items:FUN},
+  {t:'🚫 Criterios de exclusión — si están presentes, bloquean el diagnóstico correspondiente',items:EXC}
+];
+const KIND = {t:['Temporal','k-t'],f:['Funcional','k-f'],x:['Exclusión','k-x']};
+
+const md = s => s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+const sel = new Set();
+let uid = 0;
+
+// Construir lista
+const list = document.getElementById('list');
+SECTIONS.forEach(sec=>{
+  const box = document.createElement('div'); box.className='sec';
+  let html = `<h2>${sec.t}</h2>`;
+  sec.items.forEach(it=>{
+    if(it[0]==='h'){ html += `<div class="sub">${it[1]}</div>`; return; }
+    const id = uid++;
+    const k = KIND[it[0]] ? `<span class="kind ${KIND[it[0]][1]}">${KIND[it[0]][0]}</span>` : '';
+    const tags = [...it[2]].map(c=>`<span class="tag">${LBL[c]}${it[0]==='x'?' ✕':''}</span>`).join('');
+    html += `<label class="item t-${it[0]}" data-id="${id}" data-k="${it[0]}" data-dx="${it[2]}"><input type="checkbox"><div class="txt">${k}${md(it[1])}<div class="tags">${tags}</div></div></label>`;
+  });
+  box.innerHTML = html; list.appendChild(box);
+});
+
+// Construir resultados
+const res = document.getElementById('res');
+res.innerHTML = Object.keys(DX).map(c=>`
+<div class="dx" id="dx-${c}">
+ <div class="dxh"><span>${DX[c].n}</span><span class="pct">0%</span></div>
+ <div class="bar"><div class="fill"></div><i class="mark" style="left:40%"></i><i class="mark" style="left:70%"></i></div>
+ <div class="segs"><b>🔒 Síntomas</b><b>🔒 Temporal</b><b>🔒 Funcional</b></div>
+ <div class="req">${DX[c].r.join(' · ')}</div>
+ <div class="stat">Sin datos suficientes</div>
+</div>`).join('');
+
+function calc(){
+  const cnt = {};
+  for(const c in DX) cnt[c]={s:0,t:0,f:0,x:0};
+  document.querySelectorAll('.item').forEach(el=>{
+    if(!el.querySelector('input').checked) return;
+    const k = el.dataset.k==='g' ? 's' : el.dataset.k;
+    [...el.dataset.dx].forEach(c=>cnt[c][k]++);
+  });
+  for(const c in DX){
+    const d = cnt[c], card = document.getElementById('dx-'+c);
+    const s1 = Math.min(1, d.s/DX[c].th), u2 = d.t>0 && d.s>0, u3 = u2 && d.f>0;
+    let p = s1*40;
+    if(u2) p += 30;
+    if(u3) p += 30*s1;
+    const blocked = d.x>0;
+    if(blocked) p = 0;
+    p = Math.round(p);
+    card.querySelector('.pct').textContent = blocked ? '✕' : p+'%';
+    card.querySelector('.fill').style.width = p+'%';
+    const segs = card.querySelectorAll('.segs b');
+    const st = [d.s>0, u2, u3];
+    ['Síntomas','Temporal','Funcional'].forEach((n,i)=>{
+      segs[i].textContent = (st[i]?'🔓 ':'🔒 ')+n;
+      segs[i].className = st[i]?'u':'';
+    });
+    card.classList.toggle('blk', blocked);
+    card.classList.toggle('full', !blocked && p>=100);
+    card.querySelector('.stat').textContent =
+      blocked ? 'Bloqueado por criterio de exclusión' :
+      d.s===0 && d.t===0 && d.f===0 ? 'Sin datos suficientes' :
+      p>=100 ? 'Criterios orientativos completos — valorar clínicamente' :
+      p>=70 ? 'Compatible — falta valorar funcionalidad' :
+      p>=40 ? 'Síntomas suficientes — falta temporalidad' :
+      'Datos parciales';
+  }
+}
+list.addEventListener('change',e=>{
+  e.target.closest('.item').classList.toggle('on', e.target.checked);
+  calc();
+});
+document.getElementById('clr').onclick = ()=>{
+  document.querySelectorAll('.item').forEach(el=>{el.classList.remove('on');el.querySelector('input').checked=false;});
+  calc();
+};
+calc();
+</script>
+</body>
+</html>
